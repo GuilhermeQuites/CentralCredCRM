@@ -1,0 +1,34 @@
+Nova atualização:
+
+A nova atualização do CRM deve adicionar uma nova aba chamada “Usuários”. Essa aba deve ser visível apenas para usuários que possuam perfil de administrador. Usuários comuns não devem conseguir visualizar essa área nem acessar suas rotas diretamente.
+
+Dentro da aba de usuários, o administrador deverá conseguir listar todos os usuários cadastrados no sistema, criar novos usuários, editar usuários existentes e excluir usuários.
+
+Além disso, cada usuário deverá possuir permissões específicas que poderão ser ativadas ou desativadas individualmente pelo administrador.
+
+As permissões do sistema deverão ser as seguintes:
+
+visualizar_usuarios
+criar_usuarios
+editar_usuarios
+excluir_usuarios
+editar_cliente
+excluir_cliente
+editar_contrato
+excluir_contrato
+visualizar_bancos
+criar_bancos
+editar_bancos
+excluir_bancos
+visualizar_convenios
+criar_convenio
+editar_convenio
+excluir_convenio
+
+As permissões devem ser validadas tanto no frontend quanto no backend.
+
+No frontend, o sistema deve esconder menus, botões e ações que o usuário não possui acesso.
+
+No backend, todas as rotas devem validar as permissões antes de executar qualquer ação.
+
+Usuários administradores devem possuir acesso total ao sistema e controle completo sobre gerenciamento de usuários e permissões.
