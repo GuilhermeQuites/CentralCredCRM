@@ -3,11 +3,13 @@
 namespace Database\Seeders;
 
 use App\Models\Client;
+use App\Models\ClientRegistration;
 use App\Models\ContactHistory;
 use App\Models\Contract;
 use App\Models\Agreement;
 use App\Models\Bank;
 use App\Models\User;
+use App\Services\FirstDiscountDateService;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -59,6 +61,7 @@ class DatabaseSeeder extends Seeder
             ->map(fn (string $name) => Agreement::create(['name' => $name]));
 
         $types = Contract::TYPES;
+        $firstDiscountDateCalculator = new FirstDiscountDateService();
 
         for ($i = 1; $i <= 10; $i++) {
             $client = Client::create([
@@ -66,8 +69,14 @@ class DatabaseSeeder extends Seeder
                 'name' => "Cliente {$i}",
                 'cpf' => sprintf('000.000.000-%02d', $i),
                 'phone' => sprintf('(11) 90000-%04d', $i),
+                'email' => "cliente{$i}@email.com",
                 'birth_date' => now()->subYears(35 + $i)->toDateString(),
                 'notes' => $i % 3 === 0 ? 'Cliente com interesse em acompanhamento ativo.' : null,
+            ]);
+
+            $registration = ClientRegistration::create([
+                'client_id' => $client->id,
+                'number' => sprintf('MAT-%05d', $i),
             ]);
 
             $minimumInstallments = $i % 2 === 0 ? 28 : 24;
@@ -80,6 +89,7 @@ class DatabaseSeeder extends Seeder
 
             $contract = Contract::create([
                 'client_id' => $client->id,
+                'client_registration_id' => $registration->id,
                 'bank_id' => $banks[$i % $banks->count()]->id,
                 'agreement_id' => $agreements[$i % $agreements->count()]->id,
                 'contract_type' => $types[$i % count($types)],
@@ -90,6 +100,11 @@ class DatabaseSeeder extends Seeder
                 'paid_installments' => $paidInstallments,
                 'minimum_installments_for_refinancing' => $minimumInstallments,
                 'contract_date' => now()->subMonths($paidInstallments)->toDateString(),
+                'first_discount_date' => $paidInstallments === 0
+                    ? $firstDiscountDateCalculator
+                        ->calculate(now()->subMonths($paidInstallments)->toDateString())
+                        ->toDateString()
+                    : null,
                 'status' => $i === 10 ? 'finished' : 'active',
             ]);
 

@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Agreement;
 use App\Models\Bank;
 use App\Models\Client;
+use App\Models\ClientRegistration;
 use App\Models\Contract;
+use App\Services\FirstDiscountDateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -18,7 +21,7 @@ class ContractController extends Controller
         $search = request('search');
 
         return view('contracts.index', [
-            'contracts' => Contract::with(['client', 'bankRecord', 'agreement'])
+            'contracts' => Contract::with(['client', 'clientRegistration', 'bankRecord', 'agreement'])
                 ->when($search, function ($query, string $search): void {
                     $query->whereHas('client', function ($query) use ($search): void {
                         $query
@@ -36,11 +39,10 @@ class ContractController extends Controller
     public function create(): View
     {
         return view('contracts.create', [
-            'contract' => new Contract(['status' => 'active']),
+            'contract' => new Contract(),
             'clients' => $this->clients(),
             'banks' => $this->banks(),
             'agreements' => $this->agreements(),
-            'statuses' => Contract::STATUSES,
             'types' => Contract::TYPES,
         ]);
     }
@@ -56,7 +58,7 @@ class ContractController extends Controller
 
     public function show(Contract $contract): View
     {
-        $contract->load(['client.user', 'bankRecord', 'agreement', 'contactHistories']);
+        $contract->load(['client.user', 'clientRegistration', 'bankRecord', 'agreement', 'contactHistories']);
         $contract->refinancing = $contract->refinancingStatus();
 
         return view('contracts.show', compact('contract'));
@@ -69,7 +71,6 @@ class ContractController extends Controller
             'clients' => $this->clients(),
             'banks' => $this->banks(),
             'agreements' => $this->agreements(),
-            'statuses' => Contract::STATUSES,
             'types' => Contract::TYPES,
         ]);
     }
@@ -95,7 +96,7 @@ class ContractController extends Controller
     public function refinancing(Request $request): View
     {
         $filter = $request->string('filter')->toString() ?: 'eligible';
-        $contracts = Contract::with(['client.user', 'bankRecord', 'agreement'])
+        $contracts = Contract::with(['client.user', 'clientRegistration', 'bankRecord', 'agreement'])
             ->where('status', 'active')
             ->orderBy('paid_installments', 'desc')
             ->get()
@@ -121,8 +122,14 @@ class ContractController extends Controller
 
     private function validatedData(Request $request): array
     {
+        $request->merge([
+            'contract_value' => $this->normalizeCurrency($request->input('contract_value')),
+            'installment_value' => $this->normalizeCurrency($request->input('installment_value')),
+        ]);
+
         $data = $request->validate([
             'client_id' => ['required', 'exists:clients,id'],
+            'client_registration_id' => ['nullable', 'exists:client_registrations,id'],
             'bank_id' => ['required', 'exists:banks,id'],
             'agreement_id' => ['required', 'exists:agreements,id'],
             'contract_type' => ['required', Rule::in(Contract::TYPES)],
@@ -132,17 +139,73 @@ class ContractController extends Controller
             'paid_installments' => ['required', 'integer', 'min:0', 'lte:total_installments'],
             'minimum_installments_for_refinancing' => ['required', 'integer', 'min:1', 'lte:total_installments'],
             'contract_date' => ['required', 'date'],
-            'status' => ['required', Rule::in(Contract::STATUSES)],
+            'first_discount_date' => ['nullable', 'date'],
         ]);
+
+        $data['client_registration_id'] = $data['client_registration_id'] ?? null;
+
+        $clientRegistrations = ClientRegistration::query()
+            ->where('client_id', $data['client_id'])
+            ->orderBy('id')
+            ->get();
+
+        if ($clientRegistrations->count() === 1 && blank($data['client_registration_id'])) {
+            $data['client_registration_id'] = $clientRegistrations->first()->id;
+        }
+
+        if (! $clientRegistrations->contains('id', (int) $data['client_registration_id'])) {
+            throw ValidationException::withMessages([
+                'client_registration_id' => 'Selecione uma matricula valida para o cliente informado.',
+            ]);
+        }
+
+        if ((int) $data['paid_installments'] === 0) {
+            $expectedDate = app(FirstDiscountDateService::class)
+                ->calculate($data['contract_date'])
+                ->toDateString();
+
+            if (blank($data['first_discount_date'])) {
+                $data['first_discount_date'] = $expectedDate;
+            }
+
+            if ($data['first_discount_date'] !== $expectedDate) {
+                throw ValidationException::withMessages([
+                    'first_discount_date' => 'A data do primeiro desconto deve seguir a regra de fechamento da folha no dia 15.',
+                ]);
+            }
+        }
 
         $data['bank'] = Bank::find($data['bank_id'])->name;
 
         return $data;
     }
 
+    private function normalizeCurrency(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $value = trim($value);
+
+        if ($value === '') {
+            return $value;
+        }
+
+        if (str_contains($value, ',') || str_contains($value, 'R$')) {
+            $value = preg_replace('/[^\d,]/', '', $value) ?? '';
+            $value = str_replace(',', '.', $value);
+        }
+
+        return $value;
+    }
+
     private function clients()
     {
-        return Client::query()->orderBy('name')->get();
+        return Client::query()
+            ->with('registrations')
+            ->orderBy('name')
+            ->get();
     }
 
     private function banks()

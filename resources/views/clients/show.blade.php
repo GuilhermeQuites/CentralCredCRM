@@ -27,7 +27,14 @@
             <h2 class="font-semibold text-slate-950">Dados</h2>
             <dl class="mt-4 space-y-3 text-sm">
                 <div><dt class="text-slate-500">Vendedor</dt><dd class="font-medium">{{ $client->user?->name ?? '-' }}</dd></div>
+                <div><dt class="text-slate-500">E-mail</dt><dd class="font-medium">{{ $client->email ?: '-' }}</dd></div>
                 <div><dt class="text-slate-500">Nascimento</dt><dd class="font-medium">{{ $client->birth_date?->format('d/m/Y') ?? '-' }}</dd></div>
+                <div>
+                    <dt class="text-slate-500">Matriculas</dt>
+                    <dd class="font-medium">
+                        {{ $client->registrations->pluck('number')->join(', ') ?: '-' }}
+                    </dd>
+                </div>
                 <div><dt class="text-slate-500">Observacoes</dt><dd class="whitespace-pre-line">{{ $client->notes ?: '-' }}</dd></div>
             </dl>
         </section>
@@ -42,6 +49,7 @@
                     <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                         <tr>
                             <th class="px-5 py-3">Banco</th>
+                            <th class="px-5 py-3">Matricula</th>
                             <th class="px-5 py-3">Parcelas</th>
                             <th class="px-5 py-3">Status</th>
                             <th class="px-5 py-3 text-right">Acoes</th>
@@ -52,12 +60,13 @@
                             @php($refinancing = $contract->refinancingStatus())
                             <tr>
                                 <td class="px-5 py-3 font-medium">{{ $contract->bankName() }}</td>
+                                <td class="px-5 py-3 text-slate-600">{{ $contract->clientRegistration?->number ?? '-' }}</td>
                                 <td class="px-5 py-3 text-slate-600">{{ $contract->paid_installments }}/{{ $contract->total_installments }}</td>
                                 <td class="px-5 py-3">@include('contracts.partials.refinancing-badge', compact('refinancing'))</td>
                                 <td class="px-5 py-3 text-right"><a href="{{ route('contracts.show', $contract) }}" class="font-medium text-emerald-700">Abrir</a></td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="px-5 py-8 text-center text-slate-500">Nenhum contrato cadastrado.</td></tr>
+                            <tr><td colspan="5" class="px-5 py-8 text-center text-slate-500">Nenhum contrato cadastrado.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Contract extends Model
 {
@@ -17,6 +18,7 @@ class Contract extends Model
 
     protected $fillable = [
         'client_id',
+        'client_registration_id',
         'bank_id',
         'agreement_id',
         'bank',
@@ -27,6 +29,7 @@ class Contract extends Model
         'paid_installments',
         'minimum_installments_for_refinancing',
         'contract_date',
+        'first_discount_date',
         'status',
     ];
 
@@ -36,12 +39,18 @@ class Contract extends Model
             'contract_value' => 'decimal:2',
             'installment_value' => 'decimal:2',
             'contract_date' => 'date',
+            'first_discount_date' => 'date',
         ];
     }
 
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function clientRegistration(): BelongsTo
+    {
+        return $this->belongsTo(ClientRegistration::class);
     }
 
     public function bankRecord(): BelongsTo
@@ -57,6 +66,11 @@ class Contract extends Model
     public function contactHistories(): HasMany
     {
         return $this->hasMany(ContactHistory::class)->latest('contacted_at');
+    }
+
+    public function refinancingNotification(): HasOne
+    {
+        return $this->hasOne(RefinancingNotification::class);
     }
 
     public function bankName(): string

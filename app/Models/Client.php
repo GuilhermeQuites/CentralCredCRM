@@ -16,6 +16,7 @@ class Client extends Model
         'name',
         'cpf',
         'phone',
+        'email',
         'birth_date',
         'notes',
     ];
@@ -35,5 +36,10 @@ class Client extends Model
     public function contracts(): HasMany
     {
         return $this->hasMany(Contract::class);
+    }
+
+    public function registrations(): HasMany
+    {
+        return $this->hasMany(ClientRegistration::class);
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ContactHistoryController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RefinancingNotificationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -104,4 +105,15 @@ Route::middleware('auth')->group(function (): void {
 
     Route::post('/contracts/{contract}/contact-history', [ContactHistoryController::class, 'store'])
         ->name('contracts.contact-history.store');
+
+    Route::get('/refinancing-notifications', [RefinancingNotificationController::class, 'index'])
+        ->name('refinancing-notifications.index');
+    Route::post('/refinancing-notifications/{contract}/viewed', [RefinancingNotificationController::class, 'markViewed'])
+        ->name('refinancing-notifications.viewed');
+    Route::post('/refinancing-notifications/{contract}/not-refinanced', [RefinancingNotificationController::class, 'markNotRefinanced'])
+        ->name('refinancing-notifications.not-refinanced');
+    Route::post('/contracts/{contract}/refinancing-notification/viewed', [RefinancingNotificationController::class, 'markViewedFromContract'])
+        ->name('contracts.refinancing-notification.viewed');
+    Route::post('/contracts/{contract}/refinancing-notification/not-refinanced', [RefinancingNotificationController::class, 'markNotRefinancedFromContract'])
+        ->name('contracts.refinancing-notification.not-refinanced');
 });

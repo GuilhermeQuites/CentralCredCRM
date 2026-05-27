@@ -1,34 +1,129 @@
 Nova atualização:
 
-A nova atualização do CRM deve adicionar uma nova aba chamada “Usuários”. Essa aba deve ser visível apenas para usuários que possuam perfil de administrador. Usuários comuns não devem conseguir visualizar essa área nem acessar suas rotas diretamente.
+Sistema de notificações de refinanciamento disponível.
 
-Dentro da aba de usuários, o administrador deverá conseguir listar todos os usuários cadastrados no sistema, criar novos usuários, editar usuários existentes e excluir usuários.
+Vamos adicionar uma nova funcionalidade no sistema para alertar os usuários sempre que existir algum contrato disponível para refinanciamento.
 
-Além disso, cada usuário deverá possuir permissões específicas que poderão ser ativadas ou desativadas individualmente pelo administrador.
+1. Notificação ao entrar na plataforma
 
-As permissões do sistema deverão ser as seguintes:
+* Sempre que o usuário acessar a plataforma, o sistema deve verificar automaticamente se existem contratos aptos para refinanciamento.
+* Caso exista ao menos um contrato disponível:
 
-visualizar_usuarios
-criar_usuarios
-editar_usuarios
-excluir_usuarios
-editar_cliente
-excluir_cliente
-editar_contrato
-excluir_contrato
-visualizar_bancos
-criar_bancos
-editar_bancos
-excluir_bancos
-visualizar_convenios
-criar_convenio
-editar_convenio
-excluir_convenio
+  * Exibir um POP-UP de notificação na tela.
+  * Informar ao usuário que existem contratos prontos para refinanciamento.
 
-As permissões devem ser validadas tanto no frontend quanto no backend.
+Exemplo:
 
-No frontend, o sistema deve esconder menus, botões e ações que o usuário não possui acesso.
+* "Você possui contratos disponíveis para refinanciamento."
 
-No backend, todas as rotas devem validar as permissões antes de executar qualquer ação.
+2. Ícone de notificações na barra lateral
 
-Usuários administradores devem possuir acesso total ao sistema e controle completo sobre gerenciamento de usuários e permissões.
+* Adicionar um ícone de notificações ao lado do nome do usuário na sidebar/barra lateral.
+* O ícone deve possuir contador de notificações pendentes.
+
+Exemplo:
+
+* Sino de notificações com badge:
+
+  * 1
+  * 5
+  * 10
+
+3. Lista de contratos disponíveis
+
+Ao clicar no ícone de notificações:
+
+* Abrir uma listagem contendo os contratos disponíveis para refinanciamento.
+* Exibir informações importantes do contrato, como:
+
+  * Nome do cliente
+  * Matrícula utilizada
+  * Banco
+  * Quantidade de parcelas pagas
+  * Data do primeiro desconto
+  * Valor da parcela
+  * Data prevista/liberada para refinanciamento
+
+4. Regra de refinanciamento disponível
+
+O sistema deve identificar automaticamente quando um contrato está apto para refinanciamento com base nas regras de negócio cadastradas.
+
+Exemplo:
+
+* Quantidade mínima de 6 parcela para refinanciamento
+
+
+5. Ações dentro da notificação
+
+Ao clicar em um contrato disponível para refinanciamento, o sistema deve permitir ações.
+
+Botões:
+
+* Marcar como visualizado
+* Marcar como não refinanciado
+
+6. Regra de “Marcar como visualizado”
+
+Quando o gestor marcar como visualizado:
+
+* O sistema deve salvar essa informação no banco.
+* A notificação deve desaparecer da lista temporariamente.
+* O contrato não deve voltar a notificar durante 24 horas.
+* Após 24 horas:
+
+  * Caso o contrato ainda esteja apto para refinanciamento, a notificação pode voltar a aparecer.
+
+Exemplo:
+
+* Gestor visualizou às 10:00.
+* O sistema só poderá notificar novamente após 10:00 do dia seguinte.
+
+7. Regra de “Marcar como não refinanciado”
+
+Caso o gestor tente refinanciar o cliente e não consiga:
+
+* O gestor poderá marcar o contrato como:
+
+  * Não refinanciado
+
+Ao selecionar essa opção:
+
+* O sistema deve permitir escolher após quantas parcelas o contrato deve voltar a gerar notificação.
+
+Exemplos:
+
+* Voltar a notificar após 1 parcela
+* Voltar a notificar após 2 parcelas
+* Voltar a notificar após 3 parcelas
+
+Exemplo prático:
+
+* Contrato possui 12 parcelas pagas.
+* O gestor marcou como não refinanciado.
+* Escolheu voltar a notificar após 3 parcelas.
+* O sistema só deve voltar a notificar quando o contrato atingir 15 parcelas pagas.
+
+
+8. Regras gerais das notificações
+
+* O POP-UP inicial deve aparecer apenas quando existirem contratos pendentes.
+* O contador do sino deve considerar apenas notificações ativas.
+* Contratos ignorados temporariamente não devem aparecer.
+* As notificações devem continuar salvas após atualizar a página.
+* O sistema deve considerar timezone:
+
+  * America/Sao_Paulo
+
+09. Status sugeridos
+
+* pendente
+* visualizado
+* nao_refinanciado
+
+10. Requisitos técnicos
+
+* O backend deve possuir uma validação centralizada para identificar contratos aptos.
+* O frontend deve consumir essa validação via API.
+* O sistema deve atualizar as notificações em tempo real ou ao atualizar a página.
+* As regras de refinanciamento devem ficar centralizadas no backend.
+* O frontend deve apenas exibir o resultado processado pela API.

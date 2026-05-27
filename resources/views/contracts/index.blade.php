@@ -24,12 +24,14 @@
                 <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                         <th class="px-5 py-3">Cliente</th>
+                        <th class="px-5 py-3">Matricula</th>
                         <th class="px-5 py-3">Banco</th>
                         <th class="px-5 py-3">Convenio</th>
                         <th class="px-5 py-3">Tipo</th>
                         <th class="px-5 py-3">Valor</th>
                         <th class="px-5 py-3">Parcelas</th>
                         <th class="px-5 py-3">Contrato</th>
+                        <th class="px-5 py-3">Primeiro desconto</th>
                         <th class="px-5 py-3">Status</th>
                         <th class="px-5 py-3 text-right">Acoes</th>
                     </tr>
@@ -39,12 +41,14 @@
                         @php($refinancing = $contract->refinancingStatus())
                         <tr class="hover:bg-slate-50">
                             <td class="px-5 py-3 font-medium text-slate-900">{{ $contract->client->name }}</td>
+                            <td class="px-5 py-3 text-slate-600">{{ $contract->clientRegistration?->number ?? '-' }}</td>
                             <td class="px-5 py-3 text-slate-600">{{ $contract->bankName() }}</td>
                             <td class="px-5 py-3 text-slate-600">{{ $contract->agreementName() }}</td>
                             <td class="px-5 py-3 text-slate-600">{{ $contract->contractTypeLabel() }}</td>
                             <td class="px-5 py-3 text-slate-600">R$ {{ number_format((float) $contract->contract_value, 2, ',', '.') }}</td>
                             <td class="px-5 py-3 text-slate-600">{{ $contract->paid_installments }}/{{ $contract->total_installments }}</td>
                             <td class="px-5 py-3 text-slate-600">{{ $contract->contract_date->format('d/m/Y') }}</td>
+                            <td class="px-5 py-3 text-slate-600">{{ $contract->first_discount_date?->format('d/m/Y') ?? '-' }}</td>
                             <td class="px-5 py-3">@include('contracts.partials.refinancing-badge', compact('refinancing'))</td>
                             <td class="px-5 py-3 text-right">
                                 <a href="{{ route('contracts.show', $contract) }}" class="font-medium text-emerald-700 hover:text-emerald-900">Visualizar</a>
@@ -52,7 +56,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-5 py-8 text-center text-slate-500">Nenhum contrato encontrado.</td>
+                            <td colspan="11" class="px-5 py-8 text-center text-slate-500">Nenhum contrato encontrado.</td>
                         </tr>
                     @endforelse
                 </tbody>

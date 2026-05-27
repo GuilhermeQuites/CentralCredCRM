@@ -30,6 +30,7 @@
             </div>
             <dl class="mt-4 space-y-3 text-sm">
                 <div><dt class="text-slate-500">Cliente</dt><dd class="font-medium"><a href="{{ route('clients.show', $contract->client) }}" class="text-emerald-700">{{ $contract->client->name }}</a></dd></div>
+                <div><dt class="text-slate-500">Matricula</dt><dd class="font-medium">{{ $contract->clientRegistration?->number ?? '-' }}</dd></div>
                 <div><dt class="text-slate-500">Vendedor</dt><dd class="font-medium">{{ $contract->client->user?->name ?? '-' }}</dd></div>
                 <div><dt class="text-slate-500">Banco</dt><dd class="font-medium">{{ $contract->bankName() }}</dd></div>
                 <div><dt class="text-slate-500">Convenio</dt><dd class="font-medium">{{ $contract->agreementName() }}</dd></div>
@@ -37,9 +38,38 @@
                 <div><dt class="text-slate-500">Valor contratado</dt><dd class="font-medium">R$ {{ number_format((float) $contract->contract_value, 2, ',', '.') }}</dd></div>
                 <div><dt class="text-slate-500">Valor da parcela</dt><dd class="font-medium">R$ {{ number_format((float) $contract->installment_value, 2, ',', '.') }}</dd></div>
                 <div><dt class="text-slate-500">Minimo para refinanciamento</dt><dd class="font-medium">{{ $contract->minimum_installments_for_refinancing }} parcelas</dd></div>
+                <div><dt class="text-slate-500">Data do contrato</dt><dd class="font-medium">{{ $contract->contract_date?->format('d/m/Y') ?? '-' }}</dd></div>
+                <div><dt class="text-slate-500">Primeiro desconto</dt><dd class="font-medium">{{ $contract->first_discount_date?->format('d/m/Y') ?? '-' }}</dd></div>
                 <div><dt class="text-slate-500">Status do contrato</dt><dd class="font-medium">{{ ucfirst($contract->status) }}</dd></div>
             </dl>
             <p class="mt-5 rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700">{{ $contract->refinancing['message'] }}</p>
+
+            @if ($contract->refinancing['status'] === 'eligible')
+                <div class="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                    <h3 class="font-semibold text-emerald-950">Refinanciamento disponivel</h3>
+                    <p class="mt-1 text-sm text-emerald-800">Este contrato esta pronto para refinanciar.</p>
+
+                    <form method="POST" action="{{ route('contracts.refinancing-notification.viewed', $contract) }}" class="mt-4">
+                        @csrf
+                        <button class="w-full rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Marcar como visualizado</button>
+                    </form>
+
+                    <form method="POST" action="{{ route('contracts.refinancing-notification.not-refinanced', $contract) }}" class="mt-3">
+                        @csrf
+                        <label class="block text-sm font-medium text-emerald-950" for="notify_after_paid_installments">Voltar a notificar na parcela</label>
+                        <input
+                            id="notify_after_paid_installments"
+                            name="notify_after_paid_installments"
+                            type="number"
+                            min="{{ $contract->paid_installments + 1 }}"
+                            value="{{ $contract->paid_installments + 1 }}"
+                            required
+                            class="mt-1 block w-full rounded-md border border-emerald-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                        >
+                        <button class="mt-3 w-full rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">Marcar como nao refinanciado</button>
+                    </form>
+                </div>
+            @endif
         </section>
 
         <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm xl:col-span-2">
