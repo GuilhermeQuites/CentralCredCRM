@@ -1,6 +1,8 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     container_name: centralcred-app
     working_dir: /var/www
     command: sh -c "chmod -R 777 storage bootstrap/cache && php-fpm"
@@ -10,7 +12,9 @@ services:
       - mysql
 
   scheduler:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     container_name: centralcred-scheduler
     working_dir: /var/www
     command: sh -c "chmod -R 777 storage bootstrap/cache && while true; do php artisan schedule:run --no-interaction; sleep 60; done"
