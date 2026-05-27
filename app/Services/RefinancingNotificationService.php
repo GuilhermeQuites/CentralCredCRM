@@ -66,10 +66,36 @@ class RefinancingNotificationService
             [
                 'status' => RefinancingNotification::STATUS_VIEWED,
                 'viewed_at' => CarbonImmutable::now(self::TIMEZONE),
+                'viewed_by_user_id' => auth()->id(),
                 'notify_after_paid_installments' => null,
                 'marked_not_refinanced_at' => null,
             ],
         );
+    }
+
+    public function markPending(Contract $contract): RefinancingNotification
+    {
+        return RefinancingNotification::query()->updateOrCreate(
+            ['contract_id' => $contract->id],
+            [
+                'status' => RefinancingNotification::STATUS_PENDING,
+                'viewed_at' => null,
+                'viewed_by_user_id' => null,
+                'notify_after_paid_installments' => null,
+                'marked_not_refinanced_at' => null,
+            ],
+        );
+    }
+
+    public function toggleViewed(Contract $contract): RefinancingNotification
+    {
+        $contract->loadMissing('refinancingNotification');
+
+        if ($contract->refinancingNotification?->status === RefinancingNotification::STATUS_VIEWED) {
+            return $this->markPending($contract);
+        }
+
+        return $this->markViewed($contract);
     }
 
     public function markNotRefinanced(Contract $contract, int $notifyAfterPaidInstallments): RefinancingNotification
@@ -79,6 +105,7 @@ class RefinancingNotificationService
             [
                 'status' => RefinancingNotification::STATUS_NOT_REFINANCED,
                 'viewed_at' => null,
+                'viewed_by_user_id' => null,
                 'notify_after_paid_installments' => $notifyAfterPaidInstallments,
                 'marked_not_refinanced_at' => CarbonImmutable::now(self::TIMEZONE),
             ],

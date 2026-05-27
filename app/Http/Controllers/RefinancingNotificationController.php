@@ -7,10 +7,22 @@ use App\Services\RefinancingNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class RefinancingNotificationController extends Controller
 {
-    public function index(RefinancingNotificationService $service): JsonResponse
+    public function index(Request $request, RefinancingNotificationService $service): View|JsonResponse
+    {
+        if ($request->expectsJson()) {
+            return $this->data($service);
+        }
+
+        $notifications = $service->activePayload();
+
+        return view('refinancing-notifications.index', compact('notifications'));
+    }
+
+    public function data(RefinancingNotificationService $service): JsonResponse
     {
         $notifications = $service->activePayload();
         $showLoginAlert = count($notifications) > 0
@@ -31,7 +43,7 @@ class RefinancingNotificationController extends Controller
     {
         $service->markViewed($contract);
 
-        return $this->index($service);
+        return $this->data($service);
     }
 
     public function markNotRefinanced(
@@ -48,18 +60,21 @@ class RefinancingNotificationController extends Controller
 
         $service->markNotRefinanced($contract, (int) $data['notify_after_paid_installments']);
 
-        return $this->index($service);
+        return $this->data($service);
     }
 
     public function markViewedFromContract(
         Contract $contract,
         RefinancingNotificationService $service,
     ): RedirectResponse {
-        $service->markViewed($contract);
+        $contract->load('refinancingNotification');
+        $wasViewed = $contract->refinancingNotification?->status === \App\Models\RefinancingNotification::STATUS_VIEWED;
+
+        $service->toggleViewed($contract);
 
         return redirect()
             ->route('contracts.show', $contract)
-            ->with('status', 'Notificacao marcada como visualizada.');
+            ->with('status', $wasViewed ? 'Notificacao desmarcada como visualizada.' : 'Notificacao marcada como visualizada.');
     }
 
     public function markNotRefinancedFromContract(

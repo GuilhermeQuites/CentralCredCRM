@@ -1,0 +1,992 @@
+{
+  "info": {
+    "_postman_id": "8f63b604-9432-46a5-a57b-56f6b76ac001",
+    "name": "CentralCred API",
+    "description": "Collection completa da API CentralCred. A rota base esta fixa em http://localhost:8000/api/.\n\nComo usar:\n1. Execute Autenticacao > Login.\n2. O token sera salvo automaticamente na variavel token.\n3. Use as variaveis client_id, contract_id, bank_id, agreement_id e user_id para rotas de detalhe, edicao e exclusao.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": []
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": []
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "client_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "client_registration_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "contract_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "bank_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "agreement_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Autenticacao",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.access_token) {",
+                  "  pm.collectionVariables.set('token', data.access_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@centralcred.com\",\n  \"password\": \"password\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}login",
+            "description": "Autentica o usuario e salva o Bearer Token automaticamente na variavel token."
+          }
+        },
+        {
+          "name": "Usuario Logado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}me",
+            "description": "Retorna os dados do usuario autenticado."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}logout",
+            "description": "Revoga o token atual."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Utilitarios",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}dashboard",
+            "description": "Retorna os indicadores do dashboard."
+          }
+        },
+        {
+          "name": "Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}options",
+            "description": "Retorna opcoes usadas pelo front: usuarios, clientes, bancos, convenios, tipos e permissoes."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clientes",
+      "item": [
+        {
+          "name": "Listar Clientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}clients?search=&per_page=15",
+            "description": "Lista clientes. O parametro search busca por CPF ou nome."
+          }
+        },
+        {
+          "name": "Criar Cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.id) pm.collectionVariables.set('client_id', data.id);",
+                  "if (data.registrations && data.registrations[0] && data.registrations[0].id) {",
+                  "  pm.collectionVariables.set('client_registration_id', data.registrations[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": {{user_id}},\n  \"name\": \"Cliente Postman\",\n  \"cpf\": \"98765432100\",\n  \"phone\": \"11988887777\",\n  \"email\": \"cliente.postman@email.com\",\n  \"birth_date\": \"1985-01-10\",\n  \"notes\": \"Criado via Postman\",\n  \"registration_count\": \"1\",\n  \"registrations\": [\"POSTMAN-001\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}clients",
+            "description": "Cria cliente. Campos obrigatorios: user_id, name, cpf, phone, birth_date, registration_count e registrations. E-mail e notes sao opcionais."
+          }
+        },
+        {
+          "name": "Detalhar Cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}clients/{{client_id}}",
+            "description": "Retorna um cliente pelo ID."
+          }
+        },
+        {
+          "name": "Atualizar Cliente - PUT",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": {{user_id}},\n  \"name\": \"Cliente Postman Atualizado\",\n  \"cpf\": \"98765432100\",\n  \"phone\": \"11977776666\",\n  \"email\": \"cliente.atualizado@email.com\",\n  \"birth_date\": \"1985-01-10\",\n  \"notes\": \"Atualizado via PUT\",\n  \"registration_count\": \"1\",\n  \"registrations\": [\"POSTMAN-001\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}clients/{{client_id}}",
+            "description": "Atualiza o cliente inteiro."
+          }
+        },
+        {
+          "name": "Atualizar Cliente - PATCH",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Observacao atualizada via PATCH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}clients/{{client_id}}",
+            "description": "Atualiza parcialmente o cliente."
+          }
+        },
+        {
+          "name": "Excluir Cliente",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}clients/{{client_id}}",
+            "description": "Exclui o cliente informado."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contratos",
+      "item": [
+        {
+          "name": "Listar Contratos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}contracts?search=&per_page=15",
+            "description": "Lista contratos. O parametro search busca por CPF ou nome do cliente."
+          }
+        },
+        {
+          "name": "Criar Contrato",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.id) pm.collectionVariables.set('contract_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": {{client_id}},\n  \"client_registration_id\": {{client_registration_id}},\n  \"bank_id\": {{bank_id}},\n  \"agreement_id\": {{agreement_id}},\n  \"contract_type\": \"new\",\n  \"contract_value\": \"R$ 10.000,00\",\n  \"installment_value\": \"R$ 350,00\",\n  \"total_installments\": 84,\n  \"paid_installments\": 0,\n  \"minimum_installments_for_refinancing\": 6,\n  \"contract_date\": \"2026-05-10\",\n  \"first_discount_date\": \"2026-06-05\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}contracts",
+            "description": "Cria contrato. contract_type aceita refinancing, new ou portability."
+          }
+        },
+        {
+          "name": "Detalhar Contrato",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}contracts/{{contract_id}}",
+            "description": "Retorna o contrato pelo ID."
+          }
+        },
+        {
+          "name": "Atualizar Contrato - PUT",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": {{client_id}},\n  \"client_registration_id\": {{client_registration_id}},\n  \"bank_id\": {{bank_id}},\n  \"agreement_id\": {{agreement_id}},\n  \"contract_type\": \"refinancing\",\n  \"contract_value\": \"R$ 12.000,00\",\n  \"installment_value\": \"R$ 420,00\",\n  \"total_installments\": 84,\n  \"paid_installments\": 12,\n  \"minimum_installments_for_refinancing\": 6,\n  \"contract_date\": \"2026-05-10\",\n  \"first_discount_date\": \"2026-06-05\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}contracts/{{contract_id}}",
+            "description": "Atualiza o contrato inteiro."
+          }
+        },
+        {
+          "name": "Atualizar Contrato - PATCH",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paid_installments\": 13\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}contracts/{{contract_id}}",
+            "description": "Atualiza parcialmente o contrato."
+          }
+        },
+        {
+          "name": "Excluir Contrato",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}contracts/{{contract_id}}",
+            "description": "Exclui o contrato informado."
+          }
+        },
+        {
+          "name": "Criar Historico de Contato",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"whatsapp\",\n  \"description\": \"Cliente respondeu via WhatsApp.\",\n  \"contacted_at\": \"2026-05-27 10:30:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}contracts/{{contract_id}}/contact-history",
+            "description": "Adiciona historico de contato ao contrato."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bancos",
+      "item": [
+        {
+          "name": "Listar Bancos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}banks",
+            "description": "Lista bancos cadastrados."
+          }
+        },
+        {
+          "name": "Criar Banco",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.id) pm.collectionVariables.set('bank_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Banco Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}banks",
+            "description": "Cria banco. Campo obrigatorio: name."
+          }
+        },
+        {
+          "name": "Atualizar Banco - PUT",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Banco Postman Atualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}banks/{{bank_id}}",
+            "description": "Atualiza banco."
+          }
+        },
+        {
+          "name": "Atualizar Banco - PATCH",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Banco Postman PATCH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}banks/{{bank_id}}",
+            "description": "Atualiza parcialmente banco."
+          }
+        },
+        {
+          "name": "Excluir Banco",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}banks/{{bank_id}}",
+            "description": "Exclui banco."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Convenios",
+      "item": [
+        {
+          "name": "Listar Convenios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}agreements",
+            "description": "Lista convenios cadastrados."
+          }
+        },
+        {
+          "name": "Criar Convenio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.id) pm.collectionVariables.set('agreement_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Convenio Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}agreements",
+            "description": "Cria convenio. Campo obrigatorio: name."
+          }
+        },
+        {
+          "name": "Atualizar Convenio - PUT",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Convenio Postman Atualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}agreements/{{agreement_id}}",
+            "description": "Atualiza convenio."
+          }
+        },
+        {
+          "name": "Atualizar Convenio - PATCH",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Convenio Postman PATCH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}agreements/{{agreement_id}}",
+            "description": "Atualiza parcialmente convenio."
+          }
+        },
+        {
+          "name": "Excluir Convenio",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}agreements/{{agreement_id}}",
+            "description": "Exclui convenio."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Listar Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}users",
+            "description": "Lista usuarios."
+          }
+        },
+        {
+          "name": "Criar Usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.id) pm.collectionVariables.set('user_id', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuario Postman\",\n  \"email\": \"usuario.postman@email.com\",\n  \"password\": \"password\",\n  \"role\": \"seller\",\n  \"permissions\": [\n    \"editar_cliente\",\n    \"editar_contrato\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}users",
+            "description": "Cria usuario. Campos obrigatorios: name, email, password e role. permissions e opcional."
+          }
+        },
+        {
+          "name": "Atualizar Usuario - PUT",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuario Postman Atualizado\",\n  \"email\": \"usuario.postman@email.com\",\n  \"role\": \"seller\",\n  \"permissions\": [\n    \"editar_cliente\",\n    \"editar_contrato\",\n    \"visualizar_bancos\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}users/{{user_id}}",
+            "description": "Atualiza usuario. Envie password apenas quando quiser trocar a senha."
+          }
+        },
+        {
+          "name": "Atualizar Usuario - PATCH",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\n    \"editar_cliente\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}users/{{user_id}}",
+            "description": "Atualiza parcialmente usuario."
+          }
+        },
+        {
+          "name": "Excluir Usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}users/{{user_id}}",
+            "description": "Exclui usuario."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refinanciamento",
+      "item": [
+        {
+          "name": "Fila - Elegiveis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}refinancing?filter=eligible",
+            "description": "Lista contratos elegiveis para refinanciamento."
+          }
+        },
+        {
+          "name": "Fila - Aguardando",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}refinancing?filter=waiting",
+            "description": "Lista contratos que ainda nao atingiram a regra minima."
+          }
+        },
+        {
+          "name": "Fila - Ate 3 Parcelas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}refinancing?filter=up_to_3",
+            "description": "Lista contratos no filtro ate 3 parcelas."
+          }
+        },
+        {
+          "name": "Fila - Ate 6 Parcelas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}refinancing?filter=up_to_6",
+            "description": "Lista contratos no filtro ate 6 parcelas."
+          }
+        },
+        {
+          "name": "Notificacoes de Refinanciamento",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}refinancing-notifications",
+            "description": "Lista notificacoes ativas de contratos disponiveis para refinanciamento."
+          }
+        },
+        {
+          "name": "Marcar Notificacao como Visualizada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}contracts/{{contract_id}}/refinancing-notification/viewed",
+            "description": "Marca a notificacao como visualizada. O contrato volta a notificar apos 24 horas se continuar apto."
+          }
+        },
+        {
+          "name": "Marcar como Nao Refinanciado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notify_after_paid_installments\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}contracts/{{contract_id}}/refinancing-notification/not-refinanced",
+            "description": "Define em qual quantidade de parcelas pagas o contrato deve voltar a notificar."
+          }
+        }
+      ]
+    }
+  ]
+}

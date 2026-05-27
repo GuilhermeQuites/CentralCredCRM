@@ -42,33 +42,36 @@
                 <div><dt class="text-slate-500">Primeiro desconto</dt><dd class="font-medium">{{ $contract->first_discount_date?->format('d/m/Y') ?? '-' }}</dd></div>
                 <div><dt class="text-slate-500">Status do contrato</dt><dd class="font-medium">{{ ucfirst($contract->status) }}</dd></div>
             </dl>
-            <p class="mt-5 rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700">{{ $contract->refinancing['message'] }}</p>
+            <div class="mt-5 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                {{ $contract->refinancing['message'] }}
+            </div>
 
             @if ($contract->refinancing['status'] === 'eligible')
-                <div class="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                    <h3 class="font-semibold text-emerald-950">Refinanciamento disponivel</h3>
-                    <p class="mt-1 text-sm text-emerald-800">Este contrato esta pronto para refinanciar.</p>
-
-                    <form method="POST" action="{{ route('contracts.refinancing-notification.viewed', $contract) }}" class="mt-4">
-                        @csrf
-                        <button class="w-full rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Marcar como visualizado</button>
-                    </form>
-
-                    <form method="POST" action="{{ route('contracts.refinancing-notification.not-refinanced', $contract) }}" class="mt-3">
-                        @csrf
-                        <label class="block text-sm font-medium text-emerald-950" for="notify_after_paid_installments">Voltar a notificar na parcela</label>
-                        <input
-                            id="notify_after_paid_installments"
-                            name="notify_after_paid_installments"
-                            type="number"
-                            min="{{ $contract->paid_installments + 1 }}"
-                            value="{{ $contract->paid_installments + 1 }}"
-                            required
-                            class="mt-1 block w-full rounded-md border border-emerald-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-                        >
-                        <button class="mt-3 w-full rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">Marcar como nao refinanciado</button>
-                    </form>
-                </div>
+                @php
+                    $refinancingNotification = $contract->refinancingNotification;
+                    $isViewedNotification = $refinancingNotification?->status === \App\Models\RefinancingNotification::STATUS_VIEWED;
+                @endphp
+                <form method="POST" action="{{ route('contracts.refinancing-notification.viewed', $contract) }}" class="mt-5 inline-flex items-center gap-2">
+                    @csrf
+                    <button
+                        class="relative inline-flex h-4 w-8 items-center rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                        style="background-color: {{ $isViewedNotification ? '#059669' : '#94a3b8' }}; transition: background-color 180ms ease;"
+                        aria-label="{{ $isViewedNotification ? 'Desmarcar visualizado' : 'Marcar como visualizado' }}"
+                        title="{{ $isViewedNotification ? 'Desmarcar visualizado' : 'Marcar como visualizado' }}"
+                    >
+                        <span
+                            class="h-3 w-3 rounded-full bg-white"
+                            style="transform: translateX({{ $isViewedNotification ? '16px' : '2px' }}); transition: transform 180ms ease;"
+                        ></span>
+                    </button>
+                    <span class="text-sm font-medium text-slate-700">
+                        @if ($isViewedNotification && $refinancingNotification?->viewedBy)
+                            Visualizado por {{ $refinancingNotification->viewedBy->name }}
+                        @else
+                            Visualizado
+                        @endif
+                    </span>
+                </form>
             @endif
         </section>
 

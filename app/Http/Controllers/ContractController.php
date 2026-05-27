@@ -58,7 +58,7 @@ class ContractController extends Controller
 
     public function show(Contract $contract): View
     {
-        $contract->load(['client.user', 'clientRegistration', 'bankRecord', 'agreement', 'contactHistories']);
+        $contract->load(['client.user', 'clientRegistration', 'bankRecord', 'agreement', 'contactHistories', 'refinancingNotification.viewedBy']);
         $contract->refinancing = $contract->refinancingStatus();
 
         return view('contracts.show', compact('contract'));

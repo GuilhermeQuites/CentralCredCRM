@@ -108,6 +108,8 @@ Route::middleware('auth')->group(function (): void {
 
     Route::get('/refinancing-notifications', [RefinancingNotificationController::class, 'index'])
         ->name('refinancing-notifications.index');
+    Route::get('/refinancing-notifications/data', [RefinancingNotificationController::class, 'data'])
+        ->name('refinancing-notifications.data');
     Route::post('/refinancing-notifications/{contract}/viewed', [RefinancingNotificationController::class, 'markViewed'])
         ->name('refinancing-notifications.viewed');
     Route::post('/refinancing-notifications/{contract}/not-refinanced', [RefinancingNotificationController::class, 'markNotRefinanced'])

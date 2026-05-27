@@ -93,6 +93,9 @@
                 <p class="text-xs text-slate-500">Contratos prontos para refinanciar.</p>
             </div>
             <div id="refinancing-notification-list" class="max-h-96 overflow-y-auto px-5 py-3"></div>
+            <div id="refinancing-notification-footer" class="hidden border-t border-slate-200 px-5 py-3">
+                <a href="{{ route('refinancing-notifications.index') }}" class="block text-sm font-semibold text-emerald-700 hover:text-emerald-900">Ver mais notificacoes</a>
+            </div>
         </div>
 
         <button data-refinancing-notification-toggle type="button" class="fixed bottom-4 left-4 z-40 rounded-full border border-slate-200 bg-white p-3 text-slate-700 shadow-lg hover:bg-slate-50 lg:hidden" aria-label="Notificacoes de refinanciamento">
@@ -112,6 +115,7 @@
                 const badges = document.querySelectorAll('[data-refinancing-notification-count]');
                 const popover = document.getElementById('refinancing-notification-popover');
                 const list = document.getElementById('refinancing-notification-list');
+                const footer = document.getElementById('refinancing-notification-footer');
                 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
                 let notifications = [];
 
@@ -151,10 +155,13 @@
 
                     if (count === 0) {
                         list.innerHTML = '<p class="text-sm text-slate-500">Nenhuma notificacao pendente.</p>';
+                        footer.classList.add('hidden');
                         return;
                     }
 
-                    list.innerHTML = notifications.map((notification) => `
+                    const visibleNotifications = notifications.slice(0, 3);
+
+                    list.innerHTML = visibleNotifications.map((notification) => `
                         <article class="border-b border-slate-100 py-4 last:border-b-0">
                             <p class="text-sm text-slate-700">
                                 <span class="font-semibold text-slate-950">${notification.client_name}</span>
@@ -164,10 +171,12 @@
                             <p class="mt-1 text-xs text-slate-500">Matricula ${notification.registration} | ${notification.bank}</p>
                         </article>
                     `).join('');
+
+                    footer.classList.toggle('hidden', count <= 3);
                 };
 
                 const refresh = async () => {
-                    render(await request('{{ route('refinancing-notifications.index') }}'));
+                    render(await request('{{ route('refinancing-notifications.data') }}'));
                 };
 
                 buttons.forEach((button) => {

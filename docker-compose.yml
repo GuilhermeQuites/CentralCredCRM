@@ -9,6 +9,16 @@ services:
     depends_on:
       - mysql
 
+  scheduler:
+    build: .
+    container_name: centralcred-scheduler
+    working_dir: /var/www
+    command: sh -c "chmod -R 777 storage bootstrap/cache && while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - mysql
+
   nginx:
     image: nginx:alpine
     container_name: centralcred-nginx

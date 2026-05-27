@@ -95,7 +95,42 @@ class RefinancingNotificationTest extends TestCase
         $this->assertDatabaseHas('refinancing_notifications', [
             'contract_id' => $data['contract']->id,
             'status' => 'visualizado',
+            'viewed_by_user_id' => $data['user']->id,
         ]);
+    }
+
+    public function test_contract_page_can_unmark_viewed_notification(): void
+    {
+        $data = $this->eligibleContract();
+
+        $this->actingAs($data['user'])
+            ->post("/contracts/{$data['contract']->id}/refinancing-notification/viewed")
+            ->assertRedirect("/contracts/{$data['contract']->id}");
+
+        $this->actingAs($data['user'])
+            ->post("/contracts/{$data['contract']->id}/refinancing-notification/viewed")
+            ->assertRedirect("/contracts/{$data['contract']->id}");
+
+        $this->assertDatabaseHas('refinancing_notifications', [
+            'contract_id' => $data['contract']->id,
+            'status' => 'pendente',
+            'viewed_at' => null,
+            'viewed_by_user_id' => null,
+        ]);
+    }
+
+    public function test_contract_page_shows_who_marked_notification_as_viewed(): void
+    {
+        $data = $this->eligibleContract();
+
+        $this->actingAs($data['user'])
+            ->post("/contracts/{$data['contract']->id}/refinancing-notification/viewed")
+            ->assertRedirect("/contracts/{$data['contract']->id}");
+
+        $this->actingAs($data['user'])
+            ->get("/contracts/{$data['contract']->id}")
+            ->assertOk()
+            ->assertSee("Visualizado por {$data['user']->name}");
     }
 
     public function test_contract_page_can_mark_notification_as_not_refinanced_with_target_installment(): void
@@ -113,6 +148,18 @@ class RefinancingNotificationTest extends TestCase
             'status' => 'nao_refinanciado',
             'notify_after_paid_installments' => 15,
         ]);
+    }
+
+    public function test_contract_page_does_not_show_not_refinanced_controls(): void
+    {
+        $data = $this->eligibleContract(['paid_installments' => 12]);
+
+        $this->actingAs($data['user'])
+            ->get("/contracts/{$data['contract']->id}")
+            ->assertOk()
+            ->assertDontSee('Voltar a notificar na parcela')
+            ->assertDontSee('Voltar a notificar apos')
+            ->assertDontSee('Nao refinanciado');
     }
 
     /**

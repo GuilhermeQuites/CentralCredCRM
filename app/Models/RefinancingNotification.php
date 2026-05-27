@@ -18,6 +18,7 @@ class RefinancingNotification extends Model
         'contract_id',
         'status',
         'viewed_at',
+        'viewed_by_user_id',
         'notify_after_paid_installments',
         'marked_not_refinanced_at',
     ];
@@ -33,5 +34,10 @@ class RefinancingNotification extends Model
     public function contract(): BelongsTo
     {
         return $this->belongsTo(Contract::class);
+    }
+
+    public function viewedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'viewed_by_user_id');
     }
 }
