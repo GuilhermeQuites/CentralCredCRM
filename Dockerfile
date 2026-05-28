@@ -23,11 +23,23 @@ WORKDIR /var/www
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
+
 RUN npm install
 RUN npm run build
+
+RUN mkdir -p \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache \
+    bootstrap/cache
 
 RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8080
 
-CMD php artisan migrate --force && php artisan config:clear && php artisan cache:clear && php artisan route:clear && php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan migrate --force && \
+    php artisan config:clear && \
+    php artisan cache:clear && \
+    php artisan route:clear && \
+    php artisan view:clear && \
+    php artisan serve --host=0.0.0.0 --port=$PORT
